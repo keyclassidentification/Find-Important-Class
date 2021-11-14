@@ -86,13 +86,6 @@ def scoreNetwork():
         for node in tempnodes:
             nodes.append(node)
 
-        #计算最大度数
-        max_deg = 0
-        for n in Graph:
-            deg = len(Graph.edges(n))
-            if max_deg < deg:
-                max_deg = deg
-        #
         # Set the score = sum(nei) 当前节点的分数为其邻居节点分数和权重乘积之和
         weights = (wei.A)[0]
         edges = Graph.edges()
@@ -121,9 +114,7 @@ def scoreNetwork():
     return scores
 
 if __name__ == "__main__":
-    ###测试
     scores = {}
-    #scores = scoreNetwork()
     for num in range(head):
         score = scoreNetwork()
         if num == 0:
