@@ -3,12 +3,12 @@ import numpy as np
 from class2vec import Node2Vec
 import networkx as nx
 import tensorflow as tf
-from core.graphHelper import copy_directed_graph, adj_to_bias,get_neighbours
-from core.fileHelper import read_node_label,save_node_label,save_rank
+from helper.graphHelper import copy_directed_graph, adj_to_bias,get_neighbours
+from helper.fileHelper import read_node_label,save_node_label,save_rank
 from core.classAttention import getNodeAttentions
 
 def loadData():
-    G = nx.read_pajek('E:/实验/DATA/weight/ant.txt')
+    G = nx.read_pajek('E:/实验/DATA/weight/pdf.txt')
     G = copy_directed_graph(G)
 
     #walk_length:10, num_walks:80
@@ -19,7 +19,7 @@ def loadData():
     # 获取经过word2vec训练之后的嵌入
     embeddings = model.get_embeddings()
 
-    x, y = read_node_label('E:/实验/DATA/weight/class_labels.txt')
+    x, y = read_node_label('E:/实验/DATA/weight/class_pdf.txt')
 
     Y = []
     for tempname in y:
@@ -136,5 +136,5 @@ if __name__ == "__main__":
         name1.append(gy)
         scores1.append(id[1])
     save_node_label('../data/result.txt', IdNumber1, name1, scores1)
-    save_rank('E:/实验/DATA/weight/ant/KeyClass.txt', name1)
+    save_rank('E:/实验/DATA/weight/pdf/KeyClass.txt', name1)
     test = 'end'
