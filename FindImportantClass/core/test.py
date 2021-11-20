@@ -7,9 +7,10 @@ from helper.graphHelper import copy_directed_graph, adj_to_bias,get_neighbours
 from helper.fileHelper import read_node_label,save_node_label,save_rank
 from core.classAttention import getNodeAttentions
 
-className = 'ant'
+className = 'amqp'
 def loadData():
-    G = nx.read_pajek('E:/实验/DATA/weight/'+className+'.txt')
+    #G = nx.read_pajek('../data/'+className+'.txt')
+    G = nx.read_pajek('E:/实验/DATA/weight/' + className + '.txt')
     G = copy_directed_graph(G)
 
     #walk_length:10, num_walks:80
@@ -20,7 +21,8 @@ def loadData():
     # 获取经过word2vec训练之后的嵌入
     embeddings = model.get_embeddings()
 
-    x, y = read_node_label('E:/实验/DATA/weight/class_'+className+'.txt')
+    #x, y = read_node_label('../data/class_'+className+'.txt')
+    x, y = read_node_label('E:/实验/DATA/weight/class_' + className + '.txt')
 
     Y = []
     for tempname in y:
@@ -45,7 +47,7 @@ def loadData():
 
     return G,x,Y,em,weight_mat, bias_mat
 
-head = 30
+head = 1
 Graph,IdNumber,name, features, wei,bias= loadData()
 ft_size = features.shape[1]
 nb_nodes = features.shape[0]
@@ -96,6 +98,22 @@ def scoreNetwork():
             weight_set.add(weight)
         max_weight = max(weight_set)
 
+        #get attention
+        ''''atten = {}
+        for h in IdNumber:
+            index1 = IdNumber.index(h)
+            tempName1 = name[index1].strip()
+            matr_ind = nodes.index(tempName1)
+            att = attentions[matr_ind][matr_ind]
+            inner = get_neighbours(Graph, tempName1, in_out='in')
+            for m in inner:
+                if m != '0':
+                    index3 = name.index(m)
+                    matr_ind1 = nodes.index(m)
+                    att = att + attentions[matr_ind1][matr_ind]
+            atten[tempName1] = att'''
+        #end
+
         tempScores = {}
         for h in IdNumber:
             index1 = IdNumber.index(h)
@@ -108,8 +126,8 @@ def scoreNetwork():
                     index2 = name.index(m)
                     matr_ind1 = nodes.index(m)
                     att = attentions[matr_ind1][matr_ind1]
-                    tempWei = weights[matr_ind1][matr_ind] / max_weight
-                    wei1 = wei1 + (tempWei) * iniScores[index2]
+                    tempWei = weights[matr_ind1][matr_ind]/max_weight
+                    wei1 = wei1 + (tempWei)*iniScores[index2]
             tempScores[tempName1] = wei1
 
         weiOut = {}
@@ -122,7 +140,7 @@ def scoreNetwork():
             for m in inner:
                 if m != '0':
                     matr_ind1 = nodes.index(m)
-                    wei1 = wei1 + weights[matr_ind][matr_ind1] / max_weight
+                    wei1 = wei1 + weights[matr_ind][matr_ind1]/max_weight
             weiOut[tempName1] = wei1
 
         scores = {}
@@ -137,8 +155,8 @@ def scoreNetwork():
                 if n != '0':
                     index2 = name.index(n)
                     matr_ind1 = nodes.index(n)
-                    wei1 = float(weights[matr_ind1][matr_ind] / max_weight) / weiOut[n]
-                    tempscore = tempscore + (wei1 * tempScores[n])
+                    wei1 = float(weights[matr_ind1][matr_ind]/max_weight)/weiOut[n]
+                    tempscore = tempscore + (wei1*tempScores[n])
             scores[tempName1] = tempscore
         sess.close()
 
@@ -166,6 +184,7 @@ if __name__ == "__main__":
         IdNumber1.append(IdNumber[temInd])
         name1.append(gy)
         scores1.append(id[1])
-    save_node_label('../data/result.txt', IdNumber1, name1, scores1)
-    save_rank('E:/实验/DATA/weight/'+className+'/KeyClass.txt', name1)
+    #save_node_label('../data/result.txt', IdNumber1, name1, scores1)
+    #save_rank('../data/'+className+'/KeyClass.txt', name1)
+    save_rank('E:/实验/DATA/weight/' + className + '/KeyClass.txt', name1)
     test = 'end'
