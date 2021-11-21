@@ -7,10 +7,10 @@ from helper.graphHelper import copy_directed_graph, adj_to_bias,get_neighbours
 from helper.fileHelper import read_node_label,save_node_label,save_rank
 from core.classAttention import getNodeAttentions
 
-className = 'amqp'
+className = 'test'
 def loadData():
-    #G = nx.read_pajek('../data/'+className+'.txt')
-    G = nx.read_pajek('E:/实验/DATA/weight/' + className + '.txt')
+    G = nx.read_pajek('../data/'+className+'.txt')
+    #G = nx.read_pajek('E:/实验/DATA/weight/' + className + '.txt')
     G = copy_directed_graph(G)
 
     #walk_length:10, num_walks:80
@@ -21,8 +21,8 @@ def loadData():
     # 获取经过word2vec训练之后的嵌入
     embeddings = model.get_embeddings()
 
-    #x, y = read_node_label('../data/class_'+className+'.txt')
-    x, y = read_node_label('E:/实验/DATA/weight/class_' + className + '.txt')
+    x, y = read_node_label('../data/class_'+className+'.txt')
+    #x, y = read_node_label('E:/实验/DATA/weight/class_' + className + '.txt')
 
     Y = []
     for tempname in y:
@@ -184,7 +184,7 @@ if __name__ == "__main__":
         IdNumber1.append(IdNumber[temInd])
         name1.append(gy)
         scores1.append(id[1])
-    #save_node_label('../data/result.txt', IdNumber1, name1, scores1)
+    save_node_label('../data/result.txt', IdNumber1, name1, scores1)
     #save_rank('../data/'+className+'/KeyClass.txt', name1)
-    save_rank('E:/实验/DATA/weight/' + className + '/KeyClass.txt', name1)
+    #save_rank('E:/实验/DATA/weight/' + className + '/KeyClass.txt', name1)
     test = 'end'

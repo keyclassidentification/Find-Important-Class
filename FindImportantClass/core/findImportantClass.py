@@ -7,7 +7,7 @@ from helper.graphHelper import copy_directed_graph, adj_to_bias,get_neighbours
 from helper.fileHelper import read_node_label,save_node_label,save_rank
 from core.classAttention import getNodeAttentions
 
-className = 'ant'
+className = 'tomcat'
 def loadData():
     G = nx.read_pajek('E:/实验/DATA/weight/'+className+'.txt')
     G = copy_directed_graph(G)
@@ -45,7 +45,7 @@ def loadData():
 
     return G,x,Y,em,weight_mat, bias_mat
 
-head = 30
+head = 5
 Graph,IdNumber,name, features, wei,bias= loadData()
 ft_size = features.shape[1]
 nb_nodes = features.shape[0]
@@ -166,6 +166,6 @@ if __name__ == "__main__":
         IdNumber1.append(IdNumber[temInd])
         name1.append(gy)
         scores1.append(id[1])
-    save_node_label('../data/result.txt', IdNumber1, name1, scores1)
+    #save_node_label('../data/result.txt', IdNumber1, name1, scores1)
     save_rank('E:/实验/DATA/weight/'+className+'/KeyClass.txt', name1)
     test = 'end'
