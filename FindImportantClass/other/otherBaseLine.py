@@ -1,13 +1,14 @@
 import networkx
+import degree
 
 from other.minClass import compute_H
-from helper.fileHelper import save_node_label
+from helper.fileHelper import save_other_baseline_rank
 from helper.graphHelper import copy_directed_graph, update_weight, generate_un
 
 
 def otherBaseLine():
     # Input the source class information path
-    name = 'weight/test'
+    name = '1128/weight/ant'
     net_path = 'E:/实验/DATA/' + name + '.txt'
     graph = networkx.read_pajek(net_path)
     graph = copy_directed_graph(graph)
@@ -29,7 +30,7 @@ def otherBaseLine():
     try:
         data = networkx.hits(graph, max_iter=1000)  # (hubs,authorities)
         test = sorted(data[1].items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
-        save_node_label('E:/实验/DATA/' + name + '/HITS.txt', test)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/HITS.txt', test)
     except Exception as e:
         print(e)
 
@@ -37,9 +38,29 @@ def otherBaseLine():
     计算degree
     """
     try:
-        data = networkx.degree_centrality(graph, weight='weight')
+        data = degree.degree_centrality(graph, weight='weight')
         test = sorted(data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
-        save_node_label('E:/实验/DATA/' + name + '/Deg.txt', test)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/Deg.txt', test)
+    except Exception as e:
+        print(e)
+
+    '''
+    计算indegree
+    '''
+    try:
+        data = degree.in_degree_centrality(graph, weight='weight')
+        test = sorted(data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/InDeg.txt', test)
+    except Exception as e:
+        print(e)
+
+    '''
+    计算out degree
+    '''
+    try:
+        data = degree.out_degree_centrality(graph, weight='weight')
+        test = sorted(data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/OutDeg.txt', test)
     except Exception as e:
         print(e)
 
@@ -49,7 +70,7 @@ def otherBaseLine():
     try:
         data = networkx.betweenness_centrality(un_graph)
         test = sorted(data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
-        save_node_label('E:/实验/DATA/' + name + '/Between.txt', test)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/Between.txt', test)
     except Exception as e:
         print(e)
 
@@ -59,7 +80,7 @@ def otherBaseLine():
     try:
         data = networkx.closeness_centrality(un_graph)
         test = sorted(data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
-        save_node_label('E:/实验/DATA/' + name + '/Closeness.txt', test)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/Closeness.txt', test)
     except Exception as e:
         print(e)
 
@@ -69,7 +90,7 @@ def otherBaseLine():
     try:
         data = networkx.core_number(un_graph)
         test = sorted(data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
-        save_node_label('E:/实验/DATA/' + name + '/CoreNum.txt', test)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/CoreNum.txt', test)
     except Exception as e:
         print(e)
 
@@ -79,7 +100,7 @@ def otherBaseLine():
     try:
         data = networkx.pagerank(graph, weight='weight')
         test = sorted(data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
-        save_node_label('E:/实验/DATA/' + name + '/PageRank.txt', test)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/PageRank.txt', test)
     except Exception as e:
         print(e)
 
@@ -89,6 +110,10 @@ def otherBaseLine():
     try:
         data = compute_H(graph, weight='weight')
         test = sorted(data.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
-        save_node_label('E:/实验/DATA/' + name + '/MinClass.txt', test)
+        save_other_baseline_rank('E:/实验/DATA/' + name + '/MinClass.txt', test)
     except Exception as e:
         print(e)
+
+if __name__ == '__main__':
+    otherBaseLine()
+    test ="123"
