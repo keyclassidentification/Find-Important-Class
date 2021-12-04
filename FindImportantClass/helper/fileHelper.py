@@ -20,6 +20,7 @@ def read_node_labelEx(filename, skip_head=False):
     fin = open(filename, 'r')
     X = []
     Y = []
+    Z = []
     while 1:
         if skip_head:
             fin.readline()
@@ -28,9 +29,10 @@ def read_node_labelEx(filename, skip_head=False):
             break
         vec = l.strip().split(' ')
         X.append(vec[0])
-        Y.append(float(vec[1]))
+        Y.append(vec[1])
+        Z.append(int(vec[2]))
     fin.close()
-    return X, Y
+    return X, Y,Z
 
 def save_node_label(filename, x,y,z):
     f_out = open(filename, 'w+')
