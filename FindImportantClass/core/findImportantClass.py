@@ -1,24 +1,14 @@
 
 import numpy as np
-from class2vec import Node2Vec
 import networkx as nx
 import tensorflow as tf
-from helper.graphHelper import copy_directed_graph, adj_to_bias,get_neighbours
-from helper.fileHelper import read_node_label,save_node_label,save_rank
-from core.classAttention import getNodeAttentions
+from helper.graphHelper import copy_directed_graph,get_neighbours
+from helper.fileHelper import read_node_label,save_rank
 
 className = 'tomcat'
 def loadData():
     G = nx.read_pajek('E:/实验/DATA/weight/'+className+'.txt')
     G = copy_directed_graph(G)
-
-    #walk_length:10, num_walks:80
-    model = Node2Vec(G, walk_length=10, num_walks=80,
-                     p=2, q=0.1, workers=1, use_rejection_sampling=0)#p=0.25, q=4
-    # 通过word2vec训练node2vec向量模型
-    model.train(window_size=5, iter=3)
-    # 获取经过word2vec训练之后的嵌入
-    embeddings = model.get_embeddings()
 
     x, y = read_node_label('E:/实验/DATA/weight/class_'+className+'.txt')
 
@@ -36,124 +26,82 @@ def loadData():
     bias = bias.todense()
     bias = bias[np.newaxis]
     weight_mat = bias
-    bias_mat = adj_to_bias(bias, [count], nhood=1)
 
-    a = []
-    for num in embeddings:
-        a.append(embeddings[num])
-    em = np.array(a)
+    return G,x,Y,weight_mat
 
-    return G,x,Y,em,weight_mat, bias_mat
-
-head = 5
-Graph,IdNumber,name, features, wei,bias= loadData()
-ft_size = features.shape[1]
-nb_nodes = features.shape[0]
+Graph,IdNumber,name, wei= loadData()
 
 tf.compat.v1.disable_eager_execution()
-# temp add
-embedding_fn_size = 312
-# end
-def scoreNetwork():
-    weights = tf.Variable(tf.compat.v1.truncated_normal([embedding_fn_size, 1], stddev=0.1))
 
-    biases = tf.Variable(tf.compat.v1.truncated_normal([1], stddev=0.1))
+def calculateImportantScore():
+    nodes = []
+    tempnodes = Graph.nodes()
+    for node in tempnodes:
+        nodes.append(node)
 
-    embedding = tf.compat.v1.placeholder(tf.float32, [nb_nodes, ft_size])
-    ftr_in = tf.compat.v1.placeholder(dtype=tf.float32, shape=(1, nb_nodes, ft_size))
+    # Set the score = sum(nei) 当前节点的分数为其邻居节点分数和权重乘积之和
+    weights = (wei.A)[0]
+    edges = Graph.edges()
+    weight_set = set()
+    for edge in edges:
+        weight = Graph.get_edge_data(edge[0], edge[1])['weight']
+        weight_set.add(weight)
+    max_weight = max(weight_set)
 
-    weight_in = tf.compat.v1.placeholder(dtype=tf.float32, shape=(1, nb_nodes, nb_nodes))
-    bias_in = tf.compat.v1.placeholder(dtype=tf.float32, shape=(1, nb_nodes, nb_nodes))
-    e = features.astype(float)
-    output = tf.compat.v1.layers.dense(embedding, embedding_fn_size, activation=tf.nn.relu,
-                                       kernel_initializer=tf.compat.v1.truncated_normal_initializer(
-                                           stddev=0.1))
+    tempScores = {}
+    for h in IdNumber:
+        index1 = IdNumber.index(h)
+        tempName1 = name[index1].strip()
+        matr_ind = nodes.index(tempName1)
+        wei1 = 0
+        inner = get_neighbours(Graph, tempName1, in_out='in')
+        for m in inner:
+            if m != '0':
+                index2 = name.index(m)
+                matr_ind1 = nodes.index(m)
+                tempWei = weights[matr_ind1][matr_ind] / max_weight
+                wei1 = wei1 + tempWei
+        tempScores[tempName1] = wei1
 
-    output1 = tf.nn.dropout(output, 0.9)
-    output2 = tf.matmul(output1, weights) + biases
-    sco = tf.nn.sigmoid(output2)
+    weiOut = {}
+    for h in IdNumber:
+        index1 = IdNumber.index(h)
+        tempName1 = name[index1].strip()
+        matr_ind = nodes.index(tempName1)
+        wei1 = 0
+        inner = get_neighbours(Graph, tempName1, in_out='out')
+        for m in inner:
+            if m != '0':
+                matr_ind1 = nodes.index(m)
+                wei1 = wei1 + weights[matr_ind][matr_ind1] / max_weight
+        weiOut[tempName1] = wei1
 
-    attns = getNodeAttentions(ftr_in, weight_mat=weight_in, bias_mat=bias_in,out_sz=64, activation=tf.nn.elu)
-
-    with tf.compat.v1.Session() as sess:
-        sess.run(tf.group(tf.compat.v1.global_variables_initializer(), tf.compat.v1.local_variables_initializer()))
-
-        finalemb = features.reshape(1, features.shape[0], features.shape[1])
-
-        iniScores,attentions = sess.run([sco, attns], feed_dict={embedding: features, ftr_in: finalemb,weight_in:wei,bias_in: bias})
-
-        nodes = []
-        tempnodes = Graph.nodes()
-        for node in tempnodes:
-            nodes.append(node)
-
-        # Set the score = sum(nei) 当前节点的分数为其邻居节点分数和权重乘积之和
-        weights = (wei.A)[0]
-        edges = Graph.edges()
-        weight_set = set()
-        for edge in edges:
-            weight = Graph.get_edge_data(edge[0], edge[1])['weight']
-            weight_set.add(weight)
-        max_weight = max(weight_set)
-
-        tempScores = {}
-        for h in IdNumber:
-            index1 = IdNumber.index(h)
-            tempName1 = name[index1].strip()
-            matr_ind = nodes.index(tempName1)
-            wei1 = 0
-            inner = get_neighbours(Graph, tempName1, in_out='in')
-            for m in inner:
-                if m != '0':
-                    index2 = name.index(m)
-                    matr_ind1 = nodes.index(m)
-                    att = attentions[matr_ind1][matr_ind1]
-                    tempWei = weights[matr_ind1][matr_ind] / max_weight
-                    wei1 = wei1 + (tempWei) * iniScores[index2]
-            tempScores[tempName1] = wei1
-
-        weiOut = {}
-        for h in IdNumber:
-            index1 = IdNumber.index(h)
-            tempName1 = name[index1].strip()
-            matr_ind = nodes.index(tempName1)
-            wei1 = 0
-            inner = get_neighbours(Graph, tempName1, in_out='out')
-            for m in inner:
-                if m != '0':
-                    matr_ind1 = nodes.index(m)
-                    wei1 = wei1 + weights[matr_ind][matr_ind1] / max_weight
-            weiOut[tempName1] = wei1
-
-        scores = {}
-        for h in IdNumber:
-            index1 = IdNumber.index(h)
-            tempName1 = name[index1].strip()
-            matr_ind = nodes.index(tempName1)
-            att = attentions[matr_ind][matr_ind]
-            tempscore = tempScores[tempName1]
-            inner = get_neighbours(Graph, tempName1, in_out='in')
-            for n in inner:
-                if n != '0':
-                    index2 = name.index(n)
-                    matr_ind1 = nodes.index(n)
-                    wei1 = float(weights[matr_ind1][matr_ind] / max_weight) / weiOut[n]
-                    tempscore = tempscore + (wei1 * tempScores[n])
-            scores[tempName1] = tempscore
-        sess.close()
+    scores = {}
+    for h in IdNumber:
+        index1 = IdNumber.index(h)
+        tempName1 = name[index1].strip()
+        matr_ind = nodes.index(tempName1)
+        tempscore = tempScores[tempName1]
+        inner = get_neighbours(Graph, tempName1, in_out='in')
+        for n in inner:
+            if n != '0':
+                index2 = name.index(n)
+                matr_ind1 = nodes.index(n)
+                auth = 1;
+                if weights[matr_ind1][matr_ind] < 1:
+                    auth = weights[matr_ind1][matr_ind] / max_weight
+                currentWei = float(weights[matr_ind1][matr_ind] / max_weight)
+                totalWeiOut = weiOut[n]
+                wei1 = currentWei / totalWeiOut
+                neiScore = tempScores[n]
+                tempscore = tempscore + (wei1 * neiScore) * auth
+        scores[tempName1] = tempscore
 
     return scores
 
 if __name__ == "__main__":
     scores = {}
-    for num in range(head):
-        score = scoreNetwork()
-        if num == 0:
-            scores = score
-        else:
-            for (key,value) in score.items():
-               scores[key] = value + score[key]
-
+    scores = calculateImportantScore()
     sorted_id = sorted(scores.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
 
     IdNumber1 = []
