@@ -12,7 +12,6 @@ def read_node_label(filename, skip_head=False):
         vec = l.strip().split(' ')
         X.append(vec[0])
         Y.append(vec[1])
-        print(vec[0])
     fin.close()
     return X, Y
 

@@ -2,6 +2,7 @@
 import numpy as np
 import networkx as nx
 import tensorflow as tf
+import datetime
 from helper.graphHelper import copy_directed_graph,get_neighbours
 from helper.fileHelper import read_node_label,save_rank
 
@@ -29,17 +30,14 @@ def loadData():
 
     return G,x,Y,weight_mat
 
-Graph,IdNumber,name, wei= loadData()
-
 tf.compat.v1.disable_eager_execution()
 
-def calculateImportantScore():
+def calculateImportantScore(Graph,IdNumber,name,wei):
     nodes = []
     tempnodes = Graph.nodes()
     for node in tempnodes:
         nodes.append(node)
 
-    # Set the score = sum(nei) 当前节点的分数为其邻居节点分数和权重乘积之和
     weights = (wei.A)[0]
     edges = Graph.edges()
     weight_set = set()
@@ -101,7 +99,14 @@ def calculateImportantScore():
 
 if __name__ == "__main__":
     scores = {}
-    scores = calculateImportantScore()
+    # start time
+    start = datetime.datetime.now()
+    Graph, IdNumber, name, wei = loadData()
+    scores = calculateImportantScore(Graph,IdNumber,name,wei)
+    # end time
+    end = datetime.datetime.now()
+    # 打印运行时间
+    print(end - start)
     sorted_id = sorted(scores.items(), key=lambda kv: (kv[1], kv[0]), reverse=True)
 
     IdNumber1 = []
@@ -114,6 +119,5 @@ if __name__ == "__main__":
         IdNumber1.append(IdNumber[temInd])
         name1.append(gy)
         scores1.append(id[1])
-    #save_node_label('../data/result.txt', IdNumber1, name1, scores1)
     save_rank('E:/实验/DATA/weight/'+className+'/KeyClass.txt', name1)
     test = 'end'
